@@ -10,4 +10,7 @@ select pg_notify('config', '{"name": "john", "age": 10}');
 notify config, '{"name": "john", "age": 10}';
 ```
 
-A better way is to store each key-value in a table. Then attach a trigger that will call pg notify.
+A better way is to store each key-value in a table. Then attach a trigger that will call pg notify. This improves visibility compared to keeping the key-value in redis.
+
+
+
