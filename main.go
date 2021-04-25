@@ -73,8 +73,16 @@ func waitForNotification(l *pq.Listener) {
 		if err := json.Unmarshal([]byte(msg.Extra), &m); err != nil {
 			fmt.Printf("error unmarshal %s: %v\n", msg.Extra, err)
 		}
-		for k, v := range m {
-			config.Store(k, v)
+		// ROW deleted.
+		if len(m) == 0 {
+			config.Range(func(key, value interface{}) bool {
+				config.Delete(key)
+				return true
+			})
+		} else {
+			for k, v := range m {
+				config.Store(k, v)
+			}
 		}
 		fmt.Println(msg.Channel, msg.Extra)
 	case <-time.After(90 * time.Second):
