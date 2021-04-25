@@ -27,6 +27,7 @@ func main() {
 			fmt.Println(err.Error())
 		}
 	}
+	// TODO: Load all config from the database upon connection.
 	minReconn := 10 * time.Second
 	maxReconn := time.Minute
 	listener := pq.NewListener(connStr, minReconn, maxReconn, reportProblem)
@@ -73,16 +74,12 @@ func waitForNotification(l *pq.Listener) {
 		if err := json.Unmarshal([]byte(msg.Extra), &m); err != nil {
 			fmt.Printf("error unmarshal %s: %v\n", msg.Extra, err)
 		}
-		// ROW deleted.
-		if len(m) == 0 {
-			config.Range(func(key, value interface{}) bool {
-				config.Delete(key)
-				return true
-			})
-		} else {
-			for k, v := range m {
-				config.Store(k, v)
-			}
+		k, v, t := m["key"], m["value"], m["type"]
+		switch t {
+		case "INSERT", "UPDATE":
+			config.Store(k, v)
+		case "DELETE":
+			config.Delete(k)
 		}
 		fmt.Println(msg.Channel, msg.Extra)
 	case <-time.After(90 * time.Second):
